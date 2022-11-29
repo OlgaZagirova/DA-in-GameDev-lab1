@@ -1,5 +1,5 @@
-# Разработка системы машинного обучения
-Отчет по лабораторной работе #2 выполнил(а):
+# Перцептрон
+Отчет по лабораторной работе #4 выполнил(а):
 - Загирова Ольга Сергеевна
 - РИ210947
 Отметка о выполнении заданий (заполняется студентом):
@@ -35,239 +35,16 @@
 - ✨Magic ✨
 
 ## Цель работы
-Познакомиться с программными средствами для создания системы машинного обучения и ее интеграции в Unity.
+Ознакомиться с работой перцептрона.
 
 ## Задание 1
-### Реализовать систему машинного обучения в связке Python - Google-Sheets – Unity.
+### В проекте Unity реализовать перцептрон, который умеет производить вычисления.
 
 Ход работы:
-- Создать новый пустой 3D проект на Unity.
 
-![image](https://user-images.githubusercontent.com/92687732/198295682-3c5c55eb-a033-4e98-8f41-a7260bcd5efe.png)
+- Добавить пустой объект и подключить к нему скрипт Perceptron
 
-- Скачать папку с ML агентом.
-
-![image](https://user-images.githubusercontent.com/92687732/198295843-ddaa6561-30a1-4a0a-81c3-dcced6e9fa72.png)
-
-- В созданный проект добавить ML Agent, выбрав Window - Package Manager - Add Package from disk. Последовательно добавить .json – файлы:
-
-·	ml-agents-release_19 / com,unity.ml-agents / package.json
-
-·	ml-agents-release_19 / com,unity.ml-agents.extensions / package.json
-
-![image](https://user-images.githubusercontent.com/92687732/198296158-dcc552af-28f4-4096-bd8b-6d2a3971937a.png)
-
--	Все сделано правильно, поэтому во вкладке с компонентами (Components) внутри Unity появилась строка ML Agent.
-
-![image](https://user-images.githubusercontent.com/92687732/198296876-4dd484eb-f4e7-4cfb-98e5-6b22b170bccd.png)
-
--	Далее запустить Anaconda Prompt для возможности запуска команд через консоль.
-
-![image](https://user-images.githubusercontent.com/92687732/198297056-d6e6adc5-6ec6-41dc-b20a-4b2466168595.png)
-
-- Далее написать серию команд для создания и активации нового ML-агента, а также для скачивания необходимых библиотек:
-
-·	mlagents 0.28.0;
-
-·	torch 1.7.1;
-
-![image](https://user-images.githubusercontent.com/92687732/198297233-3224905f-f116-4374-8bb1-192f32e90cf9.png)
-
-![image](https://user-images.githubusercontent.com/92687732/198297280-7f1e59b8-8e19-458d-af96-c9e24914827d.png)
-
-![image](https://user-images.githubusercontent.com/92687732/198297331-3b0477a6-2391-444f-a4d5-afe1b5b513a3.png)
-
-![image](https://user-images.githubusercontent.com/92687732/198297406-0e77f139-4bae-439d-83b3-ada2f69116fa.png)
-
-![image](https://user-images.githubusercontent.com/92687732/198297462-3f73a02f-7ca7-4d30-b0fd-a6ae546527cb.png)
-
-- Создать на сцене плоскость, куб и сферу так, как показано на рисунке ниже. Создать простой C# скрипт-файл и подключить его к сфере:
-
-![image](https://user-images.githubusercontent.com/92687732/198297832-2bd94f37-d84f-40dc-b5ab-e45f7c28b44c.png)
-
-- В скрипт-файл RollerAgent.cs добавить код.
-
-![image](https://user-images.githubusercontent.com/92687732/198297991-e5758d63-d18c-42b5-89a0-653f4ab66198.png)
-
-Код:
-
-```
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using Unity.MLAgents;
-using Unity.MLAgents.Sensors;
-using Unity.MLAgents.Actuators;
-
-public class RollerAgent : Agent
-{
-    Rigidbody rBody;
-    // Start is called before the first frame update
-    void Start()
-    {
-        rBody = GetComponent<Rigidbody>();
-    }
-
-    public Transform Target;
-    public override void OnEpisodeBegin()
-    {
-        if (this.transform.localPosition.y < 0)
-        {
-            this.rBody.angularVelocity = Vector3.zero;
-            this.rBody.velocity = Vector3.zero;
-            this.transform.localPosition = new Vector3(0, 0.5f, 0);
-        }
-
-        Target.localPosition = new Vector3(Random.value * 8-4, 0.5f, Random.value * 8-4);
-    }
-    public override void CollectObservations(VectorSensor sensor)
-    {
-        sensor.AddObservation(Target.localPosition);
-        sensor.AddObservation(this.transform.localPosition);
-        sensor.AddObservation(rBody.velocity.x);
-        sensor.AddObservation(rBody.velocity.z);
-    }
-    public float forceMultiplier = 10;
-    public override void OnActionReceived(ActionBuffers actionBuffers)
-    {
-        Vector3 controlSignal = Vector3.zero;
-        controlSignal.x = actionBuffers.ContinuousActions[0];
-        controlSignal.z = actionBuffers.ContinuousActions[1];
-        rBody.AddForce(controlSignal * forceMultiplier);
-
-        float distanceToTarget = Vector3.Distance(this.transform.localPosition, Target.localPosition);
-
-        if(distanceToTarget < 1.42f)
-        {
-            SetReward(1.0f);
-            EndEpisode();
-        }
-        else if (this.transform.localPosition.y < 0)
-        {
-            EndEpisode();
-        }
-    }
-}
-```
-- Объекту «сфера» добавить компоненты Decision Requester, Behavior Parameters и настроить их.
-
-![image](https://user-images.githubusercontent.com/92687732/198298602-f66fc3e0-d9ad-486b-8a67-08d748db622d.png)
-
-- В корень проекта добавить файл конфигурации нейронной сети.
-
-![image](https://user-images.githubusercontent.com/92687732/198298816-d1a091d8-a662-40f5-a85c-a3b2d0b900e3.png)
-
-Код:
-
-```
-behaviors:
-  RollerBall:
-    trainer_type: ppo
-    hyperparameters:
-      batch_size: 10
-      buffer_size: 100
-      learning_rate: 3.0e-4
-      beta: 5.0e-4
-      epsilon: 0.2
-      lambd: 0.99
-      num_epoch: 3
-      learning_rate_schedule: linear
-    network_settings:
-      normalize: false
-      hidden_units: 128
-      num_layers: 2
-    reward_signals:
-      extrinsic:
-        gamma: 0.99
-        strength: 1.0
-    max_steps: 500000
-    time_horizon: 64
-    summary_freq: 10000
-```
-
-- Запустить работу ml-агента.
-
-![image](https://user-images.githubusercontent.com/92687732/198299906-271a53f6-7165-461c-959a-b3a9b16a8da1.png)
-
-- Вернуться в проект Unity, запустить сцену, проверить работу ML-Agent’a.
-
-![image](https://user-images.githubusercontent.com/92687732/198303393-80b373b5-b837-4fa9-ae88-105bd3ecfb19.png)
-
-![image](https://user-images.githubusercontent.com/92687732/198303453-d0510b67-16cc-4d07-876c-a97d2b7b6fec.png)
-
-![image](https://user-images.githubusercontent.com/92687732/198303499-e133d72d-31d0-4767-9139-6c8778f954f5.png)
-
-- Сделать 3, 9, 27 копий модели «Плоскость-Сфера-Куб», запустить симуляцию сцены и наблюдать за результатом обучения модели.
-
-1. 3 копии:
-
-![image](https://user-images.githubusercontent.com/92687732/198304476-69120e8d-17c7-441f-bb21-81b8c0bb81dc.png)
-
-![image](https://user-images.githubusercontent.com/92687732/198304594-502bd11b-9e06-488e-8491-e79ceec4460c.png)
-
-![image](https://user-images.githubusercontent.com/92687732/198305814-a9e59752-e08b-4999-b52a-9c0c18ddf5e6.png)
-
-2. 9 копий:
-
-![image](https://user-images.githubusercontent.com/92687732/198305200-562fe92e-1073-457c-8110-048c3eff50da.png)
-
-![image](https://user-images.githubusercontent.com/92687732/198305644-7c0ad999-dcd1-4943-98a1-ba5d28bb6733.png)
-
-![image](https://user-images.githubusercontent.com/92687732/198306155-d70489af-053c-4ddf-8bd6-8e53fd779a62.png)
-
-3. 27 копий:
-
-![image](https://user-images.githubusercontent.com/92687732/198313906-c0cc7aeb-0dc5-4d60-929d-1526fb941b3f.png)
-
-![image](https://user-images.githubusercontent.com/92687732/198314026-c1435899-59e8-4dd4-bf09-eab0a0078e97.png)
-
-![image](https://user-images.githubusercontent.com/92687732/198307089-0eaa1465-ae1d-4390-a097-3a31d32d2172.png)
-
-Вывод: После обучения модели видно, что шарик стал двигаться напрямую к кубику, перестал постоянно падать за пределы платформы и стал быстрее находить кубик.
-
-## Задание 2
-### Подробно описать каждую строку файла конфигурации нейронной сети. Самостоятельно найти информацию о компонентах Decision Requester, Behavior Parameters, добавленных сфере.
-
-Код с описанием:
-
-```
-behaviors:
- RollerBall: #Имя агента
-    trainer_type: ppo                #Устанавливаем режим обучения (Proximal Policy Optimization).
-    hyperparameters: #Задаются гиперпараметры.
-      batch_size: 10                 #Количество опытов на каждой итерации для обновления экстремумов функции.
-      buffer_size: 100               #Количество опыта, которое нужно набрать перед обновлением модели.
-      learning_rate: 3.0e-4          #Устанавливает шаг обучения (начальная скорость).
-      beta: 5.0e-4                   #Отвечает за случайность действия, повышая разнообразие и иследованность пространства обучения.
-      epsilon: 0.2                   #Порог расхождений между старой и новой политиками при обновлении.
-      lambd: 0.99                    #Определяет авторитетность оценок значений во времени. Чем выше значение, тем более авторитетен набор предыдущих оценок.
-      num_epoch: 3                   #Количество проходов через буфер опыта, при выполнении оптимизации.
-      learning_rate_schedule: linear #Определяет, как скорость обучения изменяется с течением времени, линейно уменьшает скорость.
-    network_settings: #Определяет сетевые настройки.
-      normalize: false               #Отключается нормализация входных данных.
-      hidden_units: 128              #Количество нейронов в скрытых слоях сети.
-      num_layers: 2                  #Количество скрытых слоев для размещения нейронов.
-    reward_signals: #Задает сигналы о вознаграждении.
-      extrinsic:
- gamma: 0.99                  #Коэффициент скидки для будущих вознаграждений.
-        strength: 1.0                #Шаг для learning_rate.
-    max_steps: 500000                #Общее количество шагов, которые должны быть выполнены в среде до завершения обучения.
-    time_horizon: 64                 #Количество циклов ML агента, хранящихся в буфере до ввода в модель.
-    summary_freq: 10000              #Количество опыта, который необходимо собрать перед созданием и отображением статистики.
-```
-
-- Decision Requester - запрашивает решение через регулярные промежутки времени и обрабатывает чередование между ними во время обучения.
-
-- Behavior Parameters - определяет принятие объектом решений, в него указывается какой тип поведения будет использоваться: уже обученная модель или удалённый процесс обучения.
-
-## Задание 3
-### Доработать сцену и обучить ML-Agent таким образом, чтобы шар перемещался между двумя кубами разного цвета. Кубы должны, как и впервом задании, случайно изменять кооринаты на плоскости. 
-
-- Создадим еще один куб.
-
-![image](https://user-images.githubusercontent.com/92687732/198314438-876a8717-61e7-4d44-957c-e4618a27fcdb.png)
-
-- Обновим код в скрипте, чтобы у шара появилась новая цель (новый кубик).
+![image](https://user-images.githubusercontent.com/92687732/204614113-eba0e8ff-50fe-41f2-b854-52052151bf77.png)
 
 Код: 
 
@@ -275,71 +52,195 @@ behaviors:
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Unity.MLAgents;
-using Unity.MLAgents.Sensors;
-using Unity.MLAgents.Actuators;
 
-public class RollerAgent : Agent
+[System.Serializable]
+public class TrainingSet
 {
-    Rigidbody rBody;
-    // Start is called before the first frame update
-    void Start()
+	public double[] input;
+	public double output;
+}
+
+public class Perceptron : MonoBehaviour {
+
+	public TrainingSet[] ts;
+	double[] weights = {0,0};
+	double bias = 0;
+	double totalError = 0;
+
+	double DotProductBias(double[] v1, double[] v2) 
+	{
+		if (v1 == null || v2 == null)
+			return -1;
+	 
+		if (v1.Length != v2.Length)
+			return -1;
+	 
+		double d = 0;
+		for (int x = 0; x < v1.Length; x++)
+		{
+			d += v1[x] * v2[x];
+		}
+
+		d += bias;
+	 
+		return d;
+	}
+
+	double CalcOutput(int i)
+	{
+		double dp = DotProductBias(weights,ts[i].input);
+		if(dp > 0) return(1);
+		return (0);
+	}
+
+	void InitialiseWeights()
+	{
+		for(int i = 0; i < weights.Length; i++)
+		{
+			weights[i] = Random.Range(-1.0f,1.0f);
+		}
+		bias = Random.Range(-1.0f,1.0f);
+	}
+
+	void UpdateWeights(int j)
+	{
+		double error = ts[j].output - CalcOutput(j);
+		totalError += Mathf.Abs((float)error);
+		for(int i = 0; i < weights.Length; i++)
+		{			
+			weights[i] = weights[i] + error*ts[j].input[i]; 
+		}
+		bias += error;
+	}
+
+	double CalcOutput(double i1, double i2)
+	{
+		double[] inp = new double[] {i1, i2};
+		double dp = DotProductBias(weights,inp);
+		if(dp > 0) return(1);
+		return (0);
+	}
+
+	void Train(int epochs)
+	{
+		InitialiseWeights();
+		
+		for(int e = 0; e < epochs; e++)
+		{
+			totalError = 0;
+			for(int t = 0; t < ts.Length; t++)
+			{
+				UpdateWeights(t);
+				Debug.Log("W1: " + (weights[0]) + " W2: " + (weights[1]) + " B: " + bias);
+			}
+			Debug.Log("TOTAL ERROR: " + totalError);
+		}
+	}
+
+	void Start () {
+		Train(8);
+		Debug.Log("Test 0 0: " + CalcOutput(0,0));
+		Debug.Log("Test 0 1: " + CalcOutput(0,1));
+		Debug.Log("Test 1 0: " + CalcOutput(1,0));
+		Debug.Log("Test 1 1: " + CalcOutput(1,1));		
+	}
+	
+	void Update () {
+		
+	}
+}
+```
+
+- Заполнить каждый элемент.
+
+1. OR, понадобилось 3 эпохи, 4 вычисляла корректно.
+
+![image](https://user-images.githubusercontent.com/92687732/204615507-6d2b48eb-0d7a-4a99-980c-42a964cce8ed.png)
+
+![image](https://user-images.githubusercontent.com/92687732/204615435-bea2e002-d910-40d0-8870-a7bf51d3fb12.png)
+
+2. AND, понадобилось 5 эпох, 6 вычисляла корректно.
+
+![image](https://user-images.githubusercontent.com/92687732/204616350-51a99da3-8541-4987-85ca-fd198466d1ca.png)
+
+![image](https://user-images.githubusercontent.com/92687732/204615964-6b2d6e85-cbd8-4994-b88b-b8b8d80136be.png)
+
+3. NAND, понадобилось 5 эпох, 6 вычисляла корректно.
+
+![image](https://user-images.githubusercontent.com/92687732/204616350-51a99da3-8541-4987-85ca-fd198466d1ca.png)
+
+![image](https://user-images.githubusercontent.com/92687732/204617423-88df3cef-3c2d-4173-a900-99ece37d0a90.png)
+
+4. XOR, даже спустя 100000 эпох не смог обучиться и поэтому некорректно выполняет вычисления.
+
+![image](https://user-images.githubusercontent.com/92687732/204619026-2c58e820-d31c-4b47-a66b-06332309fc50.png)
+
+![image](https://user-images.githubusercontent.com/92687732/204618716-59e54237-38c8-4542-ace7-a4ccb18e1810.png)
+
+## Задание 2
+### Построить графики зависимости количества эпох от ошибки обучения. Указать от чего зависит необходимое количество эпох обучения.
+
+Ход работы:
+
+- Внести данные в excel и построить графики.
+
+![image](https://user-images.githubusercontent.com/92687732/204627993-a2ab9ff7-e24e-49fb-9cbb-dcd4c7c78bf4.png)
+
+- Количество эпох обучения зависит от смещения(weights) и веса(bias).
+
+![image](https://user-images.githubusercontent.com/92687732/204631551-a913c998-d2ff-4300-9d1d-337619ed1847.png)
+
+## Задание 3
+### Построить визуальную модель работы перцептрона на сцене Unity.
+
+- Создадим модель для работы XOR, белые кубы - нули, черные - единицы
+
+![image](https://user-images.githubusercontent.com/92687732/204641411-6ed94bc9-7513-4b3d-8e2c-f80fed322e03.png)
+
+Код для изменения цвета при столкновении: 
+
+```
+using UnityEngine;
+
+public class ChangeColor : MonoBehaviour
+{
+    private void OnTriggerEnter(Collider other)
     {
-        rBody = GetComponent<Rigidbody>();
-    }
-    public Transform Target;
-    public Transform Target2;
-    public override void OnEpisodeBegin()
-    {
-        if (this.transform.localPosition.y < 0)
+        if (other.gameObject.GetComponent<Renderer>().material.color == Color.black && this.gameObject.GetComponent<Renderer>().material.color == Color.black)
         {
-            this.rBody.angularVelocity = Vector3.zero;
-            this.rBody.velocity = Vector3.zero;
-            this.transform.localPosition = new Vector3(0, 0.5f, 0);
+            other.gameObject.GetComponent<Renderer>().material.color = Color.white;
+            this.gameObject.GetComponent<Renderer>().material.color = Color.white;
         }
-
-        Target.localPosition = new Vector3(Random.value * 8-4, 0.5f, Random.value * 8-4);
-        Target2.localPosition = new Vector3(Random.value * 8-4, 0.5f, Random.value * 8-4);
-    }
-    public override void CollectObservations(VectorSensor sensor)
-    {
-        sensor.AddObservation(Target.localPosition);
-        sensor.AddObservation(this.transform.localPosition);
-        sensor.AddObservation(rBody.velocity.x);
-        sensor.AddObservation(rBody.velocity.z);
-    }
-    public float forceMultiplier = 10;
-    public override void OnActionReceived(ActionBuffers actionBuffers)
-    {
-        Vector3 controlSignal = Vector3.zero;
-        controlSignal.x = actionBuffers.ContinuousActions[0];
-        controlSignal.z = actionBuffers.ContinuousActions[1];
-        rBody.AddForce(controlSignal * forceMultiplier);
-
-        float distanceToTarget = Vector3.Distance(this.transform.localPosition, Target.localPosition);
-        float distanceToTarget2 = Vector3.Distance(this.transform.localPosition, Target2.localPosition);
-
-        if(distanceToTarget < 1.42f // distanceToTarget2 < 1.42f)
+        else if (other.gameObject.GetComponent<Renderer>().material.color == Color.black && this.gameObject.GetComponent<Renderer>().material.color == Color.white)
         {
-            SetReward(1.0f);
-            EndEpisode();
+            other.gameObject.GetComponent<Renderer>().material.color = Color.black;
+            this.gameObject.GetComponent<Renderer>().material.color = Color.black;
         }
-        else if (this.transform.localPosition.y < 0)
+        else if (other.gameObject.GetComponent<Renderer>().material.color == Color.white && this.gameObject.GetComponent<Renderer>().material.color == Color.black)
         {
-            EndEpisode();
+            other.gameObject.GetComponent<Renderer>().material.color = Color.black;
+            this.gameObject.GetComponent<Renderer>().material.color = Color.black;
+        }
+        else if (other.gameObject.GetComponent<Renderer>().material.color == Color.white && this.gameObject.GetComponent<Renderer>().material.color == Color.white) {
+            other.gameObject.GetComponent<Renderer>().material.color = Color.white;
+            this.gameObject.GetComponent<Renderer>().material.color = Color.white;
         }
     }
 }
 ```
 - Запустим.
 
-![image](https://user-images.githubusercontent.com/92687732/198312030-cafa9477-735e-46fb-9ae6-9e7cff0f25df.png)
+![image](https://user-images.githubusercontent.com/92687732/204645034-53cf1f11-e352-41db-be60-be2c2b5e2cd6.png)
 
-![image](https://user-images.githubusercontent.com/92687732/198312164-ef935a78-0ba4-49bc-b9cb-4b84803adfe5.png)
+![image](https://user-images.githubusercontent.com/92687732/204645138-ff4c2233-8ec1-4d7d-aeec-1ccd1e33b945.png)
+
+![image](https://user-images.githubusercontent.com/92687732/204645184-399340cf-24b7-4785-8934-5a706fc34143.png)
+
+![image](https://user-images.githubusercontent.com/92687732/204645237-f6338b3b-93a1-455d-843e-1d133b8d54a0.png)
 
 ## Выводы
 
-  В данной работе я познакомилась с программными средствами для создания системы машинного обучения и ее интеграции в Unity. Изучила, что такое игровой баланс и могу сказать, что это - субъективное «равновесие» между персонажами, командами, тактиками игры и другими игровыми объектами. Баланс должен быть и в сюжете, и сложности игры. Для настройки баланса может потребоваться достаточно много времени, поэтому существуют системы машинного обучения, которые помогут поддерживать этот баланс. Машинное обучение позволяет более точно распределять игровые механики, подлежащие балансу.
+  В данной работе я ознакомилась с работой перцептрона, который вычисляет различные функции, построила графики зависимости количества эпох от ошибки обучения, указала от чего зависит необходимое количество эпох обучения, построила визуальную модель работы перцептрона на сцене Unity.
 
 ## Powered by
 
